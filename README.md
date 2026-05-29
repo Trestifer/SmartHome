@@ -14,6 +14,12 @@ Open the Swagger UI at:
 http://localhost:8080/swagger.html
 ```
 
+Opening the app root also redirects to Swagger UI:
+
+```text
+http://localhost:8080
+```
+
 Useful endpoints:
 
 - `GET /api/devices`
