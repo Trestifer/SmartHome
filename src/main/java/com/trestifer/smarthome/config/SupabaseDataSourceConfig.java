@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Profile;
 import javax.sql.DataSource;
 
 @Configuration
-@Profile("supabase-example")
+@Profile({"supabase", "supabase-example"})
 public class SupabaseDataSourceConfig {
 
 	@Bean

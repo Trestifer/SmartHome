@@ -41,6 +41,18 @@ $env:SUPABASE_DB_PASSWORD = "your-password"
 .\gradlew.bat bootRun --args='--spring.profiles.active=supabase-example'
 ```
 
+For local development with a real password, create this ignored file:
+
+```text
+src/main/resources/application-supabase.properties
+```
+
+Then run:
+
+```powershell
+.\gradlew.bat bootRun --args='--spring.profiles.active=supabase'
+```
+
 Connection values:
 
 - Host: `aws-1-ap-northeast-1.pooler.supabase.com`
