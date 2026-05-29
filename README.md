@@ -26,31 +26,24 @@ Useful endpoints:
 - `GET /api/devices/{id}`
 - `POST /api/devices`
 
-## Supabase PostgreSQL Example
+## Supabase PostgreSQL
 
-The sample Supabase connection settings are in:
-
-```text
-src/main/resources/application-supabase-example.properties
-```
-
-Set the database password as an environment variable before running with that profile:
-
-```powershell
-$env:SUPABASE_DB_PASSWORD = "your-password"
-.\gradlew.bat bootRun --args='--spring.profiles.active=supabase-example'
-```
-
-For local development with a real password, create this ignored file:
+Copy the example properties file:
 
 ```text
-src/main/resources/application-supabase.properties
+src/main/resources/application.properties.example
 ```
 
-Then run:
+Create the ignored local file:
+
+```text
+src/main/resources/application.properties
+```
+
+Then add the real password and run:
 
 ```powershell
-.\gradlew.bat bootRun --args='--spring.profiles.active=supabase'
+.\gradlew.bat bootRun
 ```
 
 Connection values:

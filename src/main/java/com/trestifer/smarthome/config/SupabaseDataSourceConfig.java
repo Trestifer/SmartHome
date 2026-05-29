@@ -2,15 +2,15 @@ package com.trestifer.smarthome.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
 
 @Configuration
-@Profile({"supabase", "supabase-example"})
+@ConditionalOnProperty("spring.datasource.url")
 public class SupabaseDataSourceConfig {
 
 	@Bean
