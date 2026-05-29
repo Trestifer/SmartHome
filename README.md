@@ -11,7 +11,7 @@ Java 21 Spring Boot API for a simple smart home device registry.
 Open the Swagger UI at:
 
 ```text
-http://localhost:8080/swagger.html
+http://localhost:8080/swagger-ui/index.html
 ```
 
 Opening the app root also redirects to Swagger UI:
