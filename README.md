@@ -52,3 +52,26 @@ Connection values:
 - Port: `5432`
 - Database: `postgres`
 - User: `postgres.zsmcaaqwogoghnprfmmx`
+
+## Azure Deploy
+
+The GitHub Actions workflow builds this Gradle project with:
+
+```powershell
+.\gradlew.bat clean test bootJar
+```
+
+Set these Azure Web App application settings for the hosted app:
+
+```text
+SPRING_DATASOURCE_URL=jdbc:postgresql://aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres?sslmode=require
+SPRING_DATASOURCE_USERNAME=postgres.zsmcaaqwogoghnprfmmx
+SPRING_DATASOURCE_PASSWORD=your-password
+SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+```
+
+GitHub also needs the publish profile secret:
+
+```text
+AzureAppService_PublishProfile_1234
+```
