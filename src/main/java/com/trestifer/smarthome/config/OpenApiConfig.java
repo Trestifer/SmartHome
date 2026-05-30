@@ -12,8 +12,8 @@ public class OpenApiConfig {
 	OpenAPI smartHomeOpenApi() {
 		return new OpenAPI()
 				.info(new Info()
-						.title("Smart Home API")
+						.title("Pet Feeder IoT API")
 						.version("v1")
-						.description("REST API for managing smart home devices."));
+						.description("REST API for monitoring and controlling Pet Feeder IoT devices."));
 	}
 }

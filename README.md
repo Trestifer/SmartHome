@@ -1,6 +1,6 @@
 # SmartHome
 
-Java 21 Spring Boot API for a simple smart home device registry.
+Java 21 Spring Boot API for a Pet Feeder IoT backend.
 
 ## Run
 
@@ -22,9 +22,18 @@ http://localhost:8080
 
 Useful endpoints:
 
-- `GET /api/devices`
-- `GET /api/devices/{id}`
-- `POST /api/devices`
+- `GET /api/v1/devices/{device_code}`
+- `PATCH /api/v1/devices/{device_code}/status`
+- `POST /api/v1/devices/{device_code}/commands/feed-now`
+- `GET /api/v1/devices/{device_code}/schedules`
+- `POST /api/v1/devices/{device_code}/schedules`
+- `PATCH /api/v1/devices/{device_code}/schedules/{schedule_id}`
+- `DELETE /api/v1/devices/{device_code}/schedules/{schedule_id}`
+- `GET /api/v1/devices/{device_code}/feeding-logs`
+- `GET /api/v1/devices/{device_code}/device-logs`
+- `POST /api/v1/devices/{device_code}/commands/reset-wifi`
+- `GET /api/v1/devices/{device_code}/commands`
+- `PATCH /api/v1/devices/{device_code}/commands/{command_id}`
 
 ## Supabase PostgreSQL
 

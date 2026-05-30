@@ -17,13 +17,14 @@ public class SupabaseDataSourceConfig {
 	DataSource dataSource(
 			@Value("${spring.datasource.url}") String url,
 			@Value("${spring.datasource.username}") String username,
-			@Value("${spring.datasource.password}") String password
+			@Value("${spring.datasource.password}") String password,
+			@Value("${spring.datasource.driver-class-name:org.postgresql.Driver}") String driverClassName
 	) {
 		HikariConfig config = new HikariConfig();
 		config.setJdbcUrl(url);
 		config.setUsername(username);
 		config.setPassword(password);
-		config.setDriverClassName("org.postgresql.Driver");
+		config.setDriverClassName(driverClassName);
 		return new HikariDataSource(config);
 	}
 }
