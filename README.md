@@ -46,13 +46,13 @@ src/main/resources/application.properties.example
 Create the ignored local file:
 
 ```text
-src/main/resources/application.properties
+src/main/resources/application-local.properties
 ```
 
-Then add the real password and run:
+Then add the real password and run with the local profile:
 
 ```powershell
-.\gradlew.bat bootRun
+.\gradlew.bat bootRun --args="--spring.profiles.active=local"
 ```
 
 Connection values:
@@ -78,6 +78,10 @@ SPRING_DATASOURCE_USERNAME=postgres.zsmcaaqwogoghnprfmmx
 SPRING_DATASOURCE_PASSWORD=your-password
 SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
 ```
+
+For a Spring Boot executable JAR, configure the App Service runtime stack as `Java SE` with Java 21. The app binds to `PORT` or `HTTP_PLATFORM_PORT` when Azure provides either value, and falls back to `8080` locally.
+
+The datasource pool is configured not to fail the whole process during startup if Supabase is temporarily unreachable. If the Supabase username or password is wrong, Azure can still start the HTTP process, but database-backed API calls will fail until the app settings are corrected.
 
 GitHub also needs the publish profile secret:
 

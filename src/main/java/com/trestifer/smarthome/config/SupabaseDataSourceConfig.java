@@ -18,13 +18,15 @@ public class SupabaseDataSourceConfig {
 			@Value("${spring.datasource.url}") String url,
 			@Value("${spring.datasource.username}") String username,
 			@Value("${spring.datasource.password}") String password,
-			@Value("${spring.datasource.driver-class-name:org.postgresql.Driver}") String driverClassName
+			@Value("${spring.datasource.driver-class-name:org.postgresql.Driver}") String driverClassName,
+			@Value("${spring.datasource.hikari.initialization-fail-timeout:-1}") long initializationFailTimeout
 	) {
 		HikariConfig config = new HikariConfig();
 		config.setJdbcUrl(url);
 		config.setUsername(username);
 		config.setPassword(password);
 		config.setDriverClassName(driverClassName);
+		config.setInitializationFailTimeout(initializationFailTimeout);
 		return new HikariDataSource(config);
 	}
 }
