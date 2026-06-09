@@ -8,6 +8,7 @@ import com.trestifer.smarthome.petfeeder.dto.ResetWifiRequest;
 import com.trestifer.smarthome.petfeeder.dto.ScheduleRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -103,6 +104,12 @@ public class PetFeederController {
 	@GetMapping("/{deviceCode}/commands")
 	public Object listCommands(@PathVariable String deviceCode, @RequestParam(required = false) String status) {
 		return service.listCommands(deviceCode, status);
+	}
+
+	@PostMapping("/{deviceCode}/commands/next")
+	public ResponseEntity<Object> claimNextCommand(@PathVariable String deviceCode) {
+		Object command = service.claimNextCommand(deviceCode);
+		return command == null ? ResponseEntity.noContent().build() : ResponseEntity.ok(command);
 	}
 
 	@PatchMapping("/{deviceCode}/commands/{commandId}")

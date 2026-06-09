@@ -158,6 +158,12 @@ public class PetFeederService {
 	}
 
 	@Transactional
+	public Map<String, Object> claimNextCommand(String deviceCode) {
+		ensureDeviceExists(deviceCode);
+		return repository.claimNextPendingCommand(deviceCode).orElse(null);
+	}
+
+	@Transactional
 	public Map<String, Object> updateCommandStatus(String deviceCode, long commandId, CommandStatusRequest request) {
 		ensureDeviceExists(deviceCode);
 		requireOneOf(request.status(), COMMAND_STATUSES, "status không hợp lệ.");

@@ -33,6 +33,7 @@ Useful endpoints:
 - `GET /api/v1/devices/{device_code}/device-logs`
 - `POST /api/v1/devices/{device_code}/commands/reset-wifi`
 - `GET /api/v1/devices/{device_code}/commands`
+- `POST /api/v1/devices/{device_code}/commands/next`
 - `PATCH /api/v1/devices/{device_code}/commands/{command_id}`
 
 ## Supabase PostgreSQL

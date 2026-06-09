@@ -76,6 +76,25 @@ public class PetFeederRepository {
 				.listOfRows());
 	}
 
+	public Optional<Map<String, Object>> claimNextPendingCommand(String deviceCode) {
+		return firstRow(jdbc.sql("""
+				UPDATE device_commands
+				SET status = 'sent',
+				    sent_at = NOW()
+				WHERE command_id = (
+				    SELECT command_id
+				    FROM device_commands
+				    WHERE device_code = :deviceCode AND status = 'pending'
+				    ORDER BY created_at, command_id
+				    LIMIT 1
+				)
+				RETURNING command_id, device_code, command_type, portion_size, status, created_at, sent_at, completed_at
+				""")
+				.param("deviceCode", deviceCode)
+				.query()
+				.listOfRows());
+	}
+
 	public void updateCommandStatus(String deviceCode, long commandId, String status) {
 		jdbc.sql("""
 				UPDATE device_commands
