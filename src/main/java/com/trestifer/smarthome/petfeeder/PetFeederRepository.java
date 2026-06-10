@@ -5,7 +5,6 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Time;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +64,7 @@ public class PetFeederRepository {
 				.single();
 	}
 
-	public boolean hasPendingOrSentFeedCommandSince(String deviceCode, String portionSize, LocalDateTime createdAfter) {
+	public boolean hasPendingOrSentFeedCommandInCurrentMinute(String deviceCode, String portionSize) {
 		Integer count = jdbc.sql("""
 				SELECT COUNT(*)
 				FROM device_commands
@@ -73,11 +72,10 @@ public class PetFeederRepository {
 				  AND command_type = 'feed_now'
 				  AND portion_size = :portionSize
 				  AND status IN ('pending', 'sent')
-				  AND created_at >= :createdAfter
+				  AND created_at >= date_trunc('minute', NOW())
 				""")
 				.param("deviceCode", deviceCode)
 				.param("portionSize", portionSize)
-				.param("createdAfter", createdAfter)
 				.query(Integer.class)
 				.single();
 		return count != null && count > 0;

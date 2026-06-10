@@ -5,16 +5,18 @@ import com.trestifer.smarthome.petfeeder.dto.DeviceStatusRequest;
 import com.trestifer.smarthome.petfeeder.dto.FeedNowRequest;
 import com.trestifer.smarthome.petfeeder.dto.ResetWifiRequest;
 import com.trestifer.smarthome.petfeeder.dto.ScheduleRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +25,7 @@ import java.util.Set;
 @Service
 public class PetFeederService {
 
+	private static final Logger log = LoggerFactory.getLogger(PetFeederService.class);
 	private static final Set<String> DEVICE_STATUSES = Set.of("online", "offline", "feeding", "error");
 	private static final Set<String> PORTION_SIZES = Set.of("small", "medium", "large");
 	private static final Set<String> COMMAND_STATUSES = Set.of("pending", "sent", "success", "failed");
@@ -31,10 +34,16 @@ public class PetFeederService {
 
 	private final PetFeederRepository repository;
 	private final DeviceCommandSender commandSender;
+	private final ZoneId scheduleZone;
 
-	public PetFeederService(PetFeederRepository repository, DeviceCommandSender commandSender) {
+	public PetFeederService(
+			PetFeederRepository repository,
+			DeviceCommandSender commandSender,
+			@Value("${smarthome.pet-feeder.scheduler.zone:Asia/Ho_Chi_Minh}") String scheduleZone
+	) {
 		this.repository = repository;
 		this.commandSender = commandSender;
+		this.scheduleZone = ZoneId.of(scheduleZone);
 	}
 
 	public Map<String, Object> getDevice(String deviceCode) {
@@ -75,12 +84,16 @@ public class PetFeederService {
 
 	@Transactional
 	public void enqueueDueScheduledFeeds() {
-		LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-		LocalTime feedTime = now.toLocalTime();
-		for (Map<String, Object> schedule : repository.listDueSchedules(feedTime)) {
+		LocalTime feedTime = LocalTime.now(scheduleZone).withSecond(0).withNano(0);
+		List<Map<String, Object>> dueSchedules = repository.listDueSchedules(feedTime);
+		if (dueSchedules.isEmpty()) {
+			return;
+		}
+		log.info("Found {} scheduled feed(s) due at {} in {}", dueSchedules.size(), feedTime.format(FEED_TIME_FORMAT), scheduleZone);
+		for (Map<String, Object> schedule : dueSchedules) {
 			String deviceCode = schedule.get("device_code").toString();
 			String portionSize = schedule.get("portion_size").toString();
-			if (repository.hasPendingOrSentFeedCommandSince(deviceCode, portionSize, now)) {
+			if (repository.hasPendingOrSentFeedCommandInCurrentMinute(deviceCode, portionSize)) {
 				continue;
 			}
 			long commandId = repository.createCommand(deviceCode, "feed_now", portionSize);
