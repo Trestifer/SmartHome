@@ -5,12 +5,16 @@ import com.trestifer.smarthome.petfeeder.dto.DeviceStatusRequest;
 import com.trestifer.smarthome.petfeeder.dto.FeedNowRequest;
 import com.trestifer.smarthome.petfeeder.dto.ResetWifiRequest;
 import com.trestifer.smarthome.petfeeder.dto.ScheduleRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
@@ -21,6 +25,8 @@ import java.util.Set;
 @Service
 public class PetFeederService {
 
+	private static final Logger log = LoggerFactory.getLogger(PetFeederService.class);
+	private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 	private static final Set<String> DEVICE_STATUSES = Set.of("online", "offline", "feeding", "error");
 	private static final Set<String> PORTION_SIZES = Set.of("small", "medium", "large");
 	private static final Set<String> COMMAND_STATUSES = Set.of("pending", "sent", "success", "failed");
@@ -161,6 +167,31 @@ public class PetFeederService {
 	public Map<String, Object> claimNextCommand(String deviceCode) {
 		ensureDeviceExists(deviceCode);
 		return repository.claimNextPendingCommand(deviceCode).orElse(null);
+	}
+
+	/**
+	 * Fires every minute (at second :00) and creates a feed_now command for every
+	 * active schedule whose feed_time matches the current minute in Vietnam time.
+	 */
+	@Scheduled(cron = "0 * * * * *")
+	@Transactional
+	public void triggerDueSchedules() {
+		LocalTime now = LocalTime.now(VIETNAM_ZONE);
+		List<Map<String, Object>> dueSchedules = repository.findDueSchedules(now.getHour(), now.getMinute());
+		if (dueSchedules.isEmpty()) return;
+		log.info("[Scheduler] Checking at {} VN time — {} schedule(s) due", now, dueSchedules.size());
+		for (Map<String, Object> schedule : dueSchedules) {
+			String deviceCode = schedule.get("device_code").toString();
+			String portionSize = schedule.get("portion_size").toString();
+			try {
+				repository.createCommand(deviceCode, "feed_now", portionSize);
+				repository.createDeviceLog(deviceCode, "schedule",
+						"Lịch trình tự động: cho ăn khẩu phần " + portionSize + " lúc " + now.format(FEED_TIME_FORMAT));
+				log.info("[Scheduler] Feed command queued for device {} ({})", deviceCode, portionSize);
+			} catch (Exception e) {
+				log.error("[Scheduler] Failed to queue feed for device {}: {}", deviceCode, e.getMessage());
+			}
+		}
 	}
 
 	@Transactional

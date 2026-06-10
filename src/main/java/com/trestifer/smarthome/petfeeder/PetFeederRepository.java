@@ -273,7 +273,23 @@ public class PetFeederRepository {
 				.update();
 	}
 
+	/** Returns all active schedules whose feed_time matches the given hour and minute. */
+	public List<Map<String, Object>> findDueSchedules(int hour, int minute) {
+		return jdbc.sql("""
+				SELECT schedule_id, device_code, portion_size
+				FROM feeding_schedules
+				WHERE is_active = TRUE
+				  AND EXTRACT(HOUR   FROM feed_time) = :hour
+				  AND EXTRACT(MINUTE FROM feed_time) = :minute
+				""")
+				.param("hour", hour)
+				.param("minute", minute)
+				.query()
+				.listOfRows();
+	}
+
 	private Optional<Map<String, Object>> firstRow(List<Map<String, Object>> rows) {
+
 		return rows.isEmpty() ? Optional.empty() : Optional.of(rows.getFirst());
 	}
 }
