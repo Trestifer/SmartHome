@@ -14,7 +14,7 @@ public class ScheduledFeedingRunner {
 		this.service = service;
 	}
 
-	@Scheduled(fixedRateString = "${smarthome.pet-feeder.scheduler.fixed-rate-ms:60000}")
+	@Scheduled(cron = "0 * * * * *", zone = "${smarthome.pet-feeder.scheduler.zone:Asia/Ho_Chi_Minh}")
 	public void checkSchedules() {
 		service.enqueueDueScheduledFeeds();
 	}

@@ -85,7 +85,7 @@ public class PetFeederService {
 	@Transactional
 	public void enqueueDueScheduledFeeds() {
 		LocalTime feedTime = LocalTime.now(scheduleZone).withSecond(0).withNano(0);
-		List<Map<String, Object>> dueSchedules = repository.listDueSchedules(feedTime);
+		List<Map<String, Object>> dueSchedules = repository.listDueSchedules(feedTime.getHour(), feedTime.getMinute());
 		if (dueSchedules.isEmpty()) {
 			return;
 		}

@@ -162,15 +162,17 @@ public class PetFeederRepository {
 				.listOfRows();
 	}
 
-	public List<Map<String, Object>> listDueSchedules(LocalTime feedTime) {
+	public List<Map<String, Object>> listDueSchedules(int hour, int minute) {
 		return jdbc.sql("""
 				SELECT schedule_id, device_code, feed_time, portion_size, repeat_type, is_active, created_at, updated_at
 				FROM feeding_schedules
 				WHERE is_active = TRUE
-				  AND feed_time = :feedTime
+				  AND EXTRACT(HOUR FROM feed_time) = :hour
+				  AND EXTRACT(MINUTE FROM feed_time) = :minute
 				ORDER BY schedule_id
 				""")
-				.param("feedTime", Time.valueOf(feedTime))
+				.param("hour", hour)
+				.param("minute", minute)
 				.query()
 				.listOfRows();
 	}
