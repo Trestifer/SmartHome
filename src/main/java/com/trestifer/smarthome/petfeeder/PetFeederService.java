@@ -10,9 +10,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +71,22 @@ public class PetFeederService {
 				"status", command.get("status"),
 				"created_at", command.get("created_at")
 		);
+	}
+
+	@Transactional
+	public void enqueueDueScheduledFeeds() {
+		LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+		LocalTime feedTime = now.toLocalTime();
+		for (Map<String, Object> schedule : repository.listDueSchedules(feedTime)) {
+			String deviceCode = schedule.get("device_code").toString();
+			String portionSize = schedule.get("portion_size").toString();
+			if (repository.hasPendingOrSentFeedCommandSince(deviceCode, portionSize, now)) {
+				continue;
+			}
+			long commandId = repository.createCommand(deviceCode, "feed_now", portionSize);
+			repository.createDeviceLog(deviceCode, "schedule", "Created scheduled feed command from schedule " + schedule.get("schedule_id"));
+			commandSender.sendCommand(deviceCode, commandId, "feed_now", portionSize);
+		}
 	}
 
 	public List<Map<String, Object>> listSchedules(String deviceCode) {

@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Time;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,24 @@ public class PetFeederRepository {
 				.param("portionSize", portionSize)
 				.query(Long.class)
 				.single();
+	}
+
+	public boolean hasPendingOrSentFeedCommandSince(String deviceCode, String portionSize, LocalDateTime createdAfter) {
+		Integer count = jdbc.sql("""
+				SELECT COUNT(*)
+				FROM device_commands
+				WHERE device_code = :deviceCode
+				  AND command_type = 'feed_now'
+				  AND portion_size = :portionSize
+				  AND status IN ('pending', 'sent')
+				  AND created_at >= :createdAfter
+				""")
+				.param("deviceCode", deviceCode)
+				.param("portionSize", portionSize)
+				.param("createdAfter", createdAfter)
+				.query(Integer.class)
+				.single();
+		return count != null && count > 0;
 	}
 
 	public Optional<Map<String, Object>> findCommand(String deviceCode, long commandId) {
@@ -141,6 +160,19 @@ public class PetFeederRepository {
 				ORDER BY feed_time, schedule_id
 				""")
 				.param("deviceCode", deviceCode)
+				.query()
+				.listOfRows();
+	}
+
+	public List<Map<String, Object>> listDueSchedules(LocalTime feedTime) {
+		return jdbc.sql("""
+				SELECT schedule_id, device_code, feed_time, portion_size, repeat_type, is_active, created_at, updated_at
+				FROM feeding_schedules
+				WHERE is_active = TRUE
+				  AND feed_time = :feedTime
+				ORDER BY schedule_id
+				""")
+				.param("feedTime", Time.valueOf(feedTime))
 				.query()
 				.listOfRows();
 	}
