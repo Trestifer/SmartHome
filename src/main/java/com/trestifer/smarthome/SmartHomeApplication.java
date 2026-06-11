@@ -5,8 +5,8 @@ import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
 @EnableScheduling
+@SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
 public class SmartHomeApplication {
 
 	public static void main(String[] args) {

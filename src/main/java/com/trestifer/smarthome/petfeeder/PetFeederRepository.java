@@ -73,6 +73,23 @@ public class PetFeederRepository {
 				.single();
 	}
 
+	public boolean hasPendingOrSentFeedCommandInCurrentMinute(String deviceCode, String portionSize) {
+		Integer count = jdbc.sql("""
+				SELECT COUNT(*)
+				FROM device_commands
+				WHERE device_code = :deviceCode
+				  AND command_type = 'feed_now'
+				  AND portion_size = :portionSize
+				  AND status IN ('pending', 'sent')
+				  AND created_at >= date_trunc('minute', NOW())
+				""")
+				.param("deviceCode", deviceCode)
+				.param("portionSize", portionSize)
+				.query(Integer.class)
+				.single();
+		return count != null && count > 0;
+	}
+
 	public Optional<Map<String, Object>> findCommand(String deviceCode, long commandId) {
 		return firstRow(jdbc.sql("""
 				SELECT command_id, device_code, command_type, portion_size, status, created_at, sent_at, completed_at
@@ -150,6 +167,21 @@ public class PetFeederRepository {
 				ORDER BY feed_time, schedule_id
 				""")
 				.param("deviceCode", deviceCode)
+				.query()
+				.listOfRows();
+	}
+
+	public List<Map<String, Object>> listDueSchedules(int hour, int minute) {
+		return jdbc.sql("""
+				SELECT schedule_id, device_code, feed_time, portion_size, repeat_type, is_active, created_at, updated_at
+				FROM feeding_schedules
+				WHERE is_active = TRUE
+				  AND EXTRACT(HOUR FROM CAST(feed_time AS time)) = :hour
+				  AND EXTRACT(MINUTE FROM CAST(feed_time AS time)) = :minute
+				ORDER BY schedule_id
+				""")
+				.param("hour", hour)
+				.param("minute", minute)
 				.query()
 				.listOfRows();
 	}
@@ -280,21 +312,6 @@ public class PetFeederRepository {
 				.param("status", status)
 				.param("message", message)
 				.update();
-	}
-
-	/** Returns all active schedules whose feed_time matches the given hour and minute. */
-	public List<Map<String, Object>> findDueSchedules(int hour, int minute) {
-		return jdbc.sql("""
-				SELECT schedule_id, device_code, portion_size
-				FROM feeding_schedules
-				WHERE is_active = TRUE
-				  AND EXTRACT(HOUR   FROM CAST(feed_time AS time)) = :hour
-				  AND EXTRACT(MINUTE FROM CAST(feed_time AS time)) = :minute
-				""")
-				.param("hour", hour)
-				.param("minute", minute)
-				.query()
-				.listOfRows();
 	}
 
 	private Optional<Map<String, Object>> firstRow(List<Map<String, Object>> rows) {
