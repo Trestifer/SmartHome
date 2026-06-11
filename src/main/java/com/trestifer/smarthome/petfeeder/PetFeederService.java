@@ -97,7 +97,7 @@ public class PetFeederService {
 				continue;
 			}
 			long commandId = repository.createCommand(deviceCode, "feed_now", portionSize);
-			repository.createDeviceLog(deviceCode, "schedule", "Created scheduled feed command from schedule " + schedule.get("schedule_id"));
+			repository.createDeviceLog(deviceCode, "command", "Created scheduled feed command from schedule " + schedule.get("schedule_id"));
 			commandSender.sendCommand(deviceCode, commandId, "feed_now", portionSize);
 		}
 	}
