@@ -314,6 +314,28 @@ public class PetFeederRepository {
 				.update();
 	}
 
+	public boolean feedingLogExists(long commandId) {
+		Integer count = jdbc.sql("SELECT COUNT(*) FROM feeding_logs WHERE command_id = :commandId")
+				.param("commandId", commandId)
+				.query(Integer.class)
+				.single();
+		return count != null && count > 0;
+	}
+
+	public void updateFeedingLogStatus(long commandId, String status, String message) {
+		jdbc.sql("""
+				UPDATE feeding_logs
+				SET status = :status,
+				    message = :message,
+				    fed_at = NOW()
+				WHERE command_id = :commandId
+				""")
+				.param("status", status)
+				.param("message", message)
+				.param("commandId", commandId)
+				.update();
+	}
+
 	private Optional<Map<String, Object>> firstRow(List<Map<String, Object>> rows) {
 
 		return rows.isEmpty() ? Optional.empty() : Optional.of(rows.getFirst());

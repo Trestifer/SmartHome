@@ -71,9 +71,8 @@ public class PetFeederService {
 		repository.createDeviceLog(deviceCode, "command", "Nhận lệnh cho ăn ngay");
 		commandSender.sendCommand(deviceCode, commandId, "feed_now", request.portion_size());
 		
-		// Auto-succeed command immediately for simulation/testing so it records in feeding history
-		repository.updateCommandStatus(deviceCode, commandId, "success");
-		repository.createFeedingLog(deviceCode, commandId, "manual", request.portion_size(), "success", "Cho ăn thành công (Giả lập)");
+		// Immediately create the feeding log so it displays in history instantly, but keep the command status as 'pending'
+		repository.createFeedingLog(deviceCode, commandId, "manual", request.portion_size(), "success", "Cho ăn thành công");
 
 		Map<String, Object> command = repository.findCommand(deviceCode, commandId).orElseThrow(() -> notFound("Không tìm thấy lệnh."));
 		return Map.of(
@@ -110,9 +109,8 @@ public class PetFeederService {
 			repository.createDeviceLog(deviceCode, "command", "Created scheduled feed command from schedule " + schedule.get("schedule_id"));
 			commandSender.sendCommand(deviceCode, commandId, "feed_now", portionSize);
 
-			// Auto-succeed scheduled feeds immediately for simulation/testing so it records in feeding history
-			repository.updateCommandStatus(deviceCode, commandId, "success");
-			repository.createFeedingLog(deviceCode, commandId, "scheduled", portionSize, "success", "Cho ăn theo lịch thành công (Giả lập)");
+			// Immediately create the feeding log so it displays in history instantly, but keep the command status as 'pending'
+			repository.createFeedingLog(deviceCode, commandId, "scheduled", portionSize, "success", "Cho ăn theo lịch thành công");
 		}
 	}
 
@@ -218,7 +216,11 @@ public class PetFeederService {
 		repository.createDeviceLog(deviceCode, "command", defaultMessage(request.message(), "Cập nhật trạng thái lệnh: " + request.status()));
 		if ("feed_now".equals(command.get("command_type")) && Set.of("success", "failed").contains(request.status())) {
 			String message = defaultMessage(request.message(), "Thiết bị đã xử lý lệnh cho ăn");
-			repository.createFeedingLog(deviceCode, commandId, "manual", command.get("portion_size").toString(), request.status(), message);
+			if (repository.feedingLogExists(commandId)) {
+				repository.updateFeedingLogStatus(commandId, request.status(), message);
+			} else {
+				repository.createFeedingLog(deviceCode, commandId, "manual", command.get("portion_size").toString(), request.status(), message);
+			}
 		}
 		return Map.of(
 				"message", "Cập nhật trạng thái lệnh thành công",
