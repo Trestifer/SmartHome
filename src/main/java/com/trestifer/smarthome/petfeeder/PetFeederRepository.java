@@ -52,6 +52,15 @@ public class PetFeederRepository {
 	}
 
 	public long createCommand(String deviceCode, String commandType, String portionSize) {
+		jdbc.sql("""
+				UPDATE device_commands
+				SET status = 'failed',
+				    completed_at = NOW()
+				WHERE device_code = :deviceCode AND status = 'pending'
+				""")
+				.param("deviceCode", deviceCode)
+				.update();
+
 		return jdbc.sql("""
 				INSERT INTO device_commands (device_code, command_type, portion_size, status)
 				VALUES (:deviceCode, :commandType, :portionSize, 'pending')
@@ -200,7 +209,7 @@ public class PetFeederRepository {
 					FROM feeding_schedules
 					WHERE device_code = ?
 					  AND is_active = TRUE
-					  AND ABS(EXTRACT(EPOCH FROM (feed_time - ?::time))) < 300
+					  AND ABS(EXTRACT(EPOCH FROM (CAST(feed_time AS time) - ?::time))) < 300
 					""";
 			Integer count = jdbcTemplate.queryForObject(sql, Integer.class, deviceCode, Time.valueOf(feedTime));
 			return count != null && count > 0;
@@ -211,7 +220,7 @@ public class PetFeederRepository {
 				WHERE device_code = ?
 				  AND is_active = TRUE
 				  AND schedule_id <> ?
-				  AND ABS(EXTRACT(EPOCH FROM (feed_time - ?::time))) < 300
+				  AND ABS(EXTRACT(EPOCH FROM (CAST(feed_time AS time) - ?::time))) < 300
 				""";
 		Integer count = jdbcTemplate.queryForObject(sql, Integer.class,
 				deviceCode,
@@ -279,8 +288,8 @@ public class PetFeederRepository {
 				SELECT schedule_id, device_code, portion_size
 				FROM feeding_schedules
 				WHERE is_active = TRUE
-				  AND EXTRACT(HOUR   FROM feed_time) = :hour
-				  AND EXTRACT(MINUTE FROM feed_time) = :minute
+				  AND EXTRACT(HOUR   FROM CAST(feed_time AS time)) = :hour
+				  AND EXTRACT(MINUTE FROM CAST(feed_time AS time)) = :minute
 				""")
 				.param("hour", hour)
 				.param("minute", minute)
