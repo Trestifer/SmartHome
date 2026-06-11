@@ -85,11 +85,16 @@ public class PetFeederService {
 	@Transactional
 	public void enqueueDueScheduledFeeds() {
 		LocalTime feedTime = LocalTime.now(scheduleZone).plusSeconds(1).withSecond(0).withNano(0);
-		List<Map<String, Object>> dueSchedules = repository.listDueSchedules(feedTime.getHour(), feedTime.getMinute());
+		enqueueDueScheduledFeedsForTime(feedTime.getHour(), feedTime.getMinute());
+	}
+
+	@Transactional
+	public void enqueueDueScheduledFeedsForTime(int hour, int minute) {
+		List<Map<String, Object>> dueSchedules = repository.listDueSchedules(hour, minute);
 		if (dueSchedules.isEmpty()) {
 			return;
 		}
-		log.info("Found {} scheduled feed(s) due at {} in {}", dueSchedules.size(), feedTime.format(FEED_TIME_FORMAT), scheduleZone);
+		log.info("Processing {} scheduled feed(s) due at {:02d}:{:02d}", dueSchedules.size(), hour, minute);
 		for (Map<String, Object> schedule : dueSchedules) {
 			String deviceCode = schedule.get("device_code").toString();
 			String portionSize = schedule.get("portion_size").toString();

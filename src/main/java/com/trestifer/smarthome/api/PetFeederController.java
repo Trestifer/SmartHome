@@ -120,4 +120,18 @@ public class PetFeederController {
 	) {
 		return service.updateCommandStatus(deviceCode, commandId, request);
 	}
+
+	@PostMapping("/{deviceCode}/schedules/trigger-due")
+	public ResponseEntity<Object> triggerDueSchedules(
+			@PathVariable String deviceCode,
+			@RequestParam(required = false) Integer hour,
+			@RequestParam(required = false) Integer minute
+	) {
+		if (hour != null && minute != null) {
+			service.enqueueDueScheduledFeedsForTime(hour, minute);
+		} else {
+			service.enqueueDueScheduledFeeds();
+		}
+		return ResponseEntity.ok(java.util.Map.of("message", "Triggered due schedules check"));
+	}
 }
