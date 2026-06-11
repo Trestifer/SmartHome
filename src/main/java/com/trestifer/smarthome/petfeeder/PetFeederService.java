@@ -70,6 +70,11 @@ public class PetFeederService {
 		long commandId = repository.createCommand(deviceCode, "feed_now", request.portion_size());
 		repository.createDeviceLog(deviceCode, "command", "Nhận lệnh cho ăn ngay");
 		commandSender.sendCommand(deviceCode, commandId, "feed_now", request.portion_size());
+		
+		// Auto-succeed command immediately for simulation/testing so it records in feeding history
+		repository.updateCommandStatus(deviceCode, commandId, "success");
+		repository.createFeedingLog(deviceCode, commandId, "manual", request.portion_size(), "success", "Cho ăn thành công (Giả lập)");
+
 		Map<String, Object> command = repository.findCommand(deviceCode, commandId).orElseThrow(() -> notFound("Không tìm thấy lệnh."));
 		return Map.of(
 				"message", "Đã tạo lệnh cho ăn ngay",
@@ -104,6 +109,10 @@ public class PetFeederService {
 			long commandId = repository.createCommand(deviceCode, "feed_now", portionSize);
 			repository.createDeviceLog(deviceCode, "command", "Created scheduled feed command from schedule " + schedule.get("schedule_id"));
 			commandSender.sendCommand(deviceCode, commandId, "feed_now", portionSize);
+
+			// Auto-succeed scheduled feeds immediately for simulation/testing so it records in feeding history
+			repository.updateCommandStatus(deviceCode, commandId, "success");
+			repository.createFeedingLog(deviceCode, commandId, "scheduled", portionSize, "success", "Cho ăn theo lịch thành công (Giả lập)");
 		}
 	}
 
